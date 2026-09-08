@@ -1,0 +1,6 @@
+export const BROKER_KEYS = {
+  SERVICE: {
+    COMPANY: 'COMPANY_SERVICE',
+    NOTIFICATION: 'NOTIFICATION_SERVICE',
+  },
+} as const;

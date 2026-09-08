@@ -1,0 +1,4 @@
+import { COMPANY_SERVICE, NOTIFICATION_SERVICE } from '../constants';
+
+export type TCOMPANY_SERVICE = typeof COMPANY_SERVICE;
+export type TNOTIFICATION_SERVICE = typeof NOTIFICATION_SERVICE;

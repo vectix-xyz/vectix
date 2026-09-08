@@ -1,0 +1,65 @@
+{
+  "name": "@repo/infra",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SWC,TSC\" -c \"blue,yellow\" \"bun run build:swc --watch\" \"bun run build:tsc --watch --preserveWatchOutput\"",
+    "dev:solo": "concurrently -k -p \"[{name}]\" -n \"SWC,TSC\" -c \"blue,yellow\" \"bun run build:swc --watch\" \"bun run build:tsc --watch --preserveWatchOutput\"",
+    "build:swc": "swc src -d dist --strip-leading-paths --config-file ../typescript-config/nest.swcrc",
+    "build:tsc": "tsc --emitDeclarationOnly",
+    "obfuscate": "javascript-obfuscator ./dist --output ./dist --config obfuscator.json",
+    "build": "bun run clean && bun run build:swc && bun run build:tsc",
+    "build:prod": "bun run build && bun run obfuscate",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "./dist/**"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./context": {
+      "import": "./dist/context/index.js",
+      "require": "./dist/context/index.js"
+    },
+    "./otp": {
+      "import": "./dist/otp/index.js",
+      "require": "./dist/otp/index.js"
+    },
+    "./redis": {
+      "import": "./dist/redis/index.js",
+      "require": "./dist/redis/index.js"
+    }
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@swc/cli": "^0.8.1",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/node": "^26.4.1",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6",
+    "ts-loader": "^9.6.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^7",
+    "typescript-eslint": "^8.69.0"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
+    "@repo/common": "workspace:*",
+    "concurrently": "^10.0.5",
+    "ioredis": "^6.0.0",
+    "javascript-obfuscator": "^5.6.0",
+    "patcode": "^1.0.1"
+  }
+}

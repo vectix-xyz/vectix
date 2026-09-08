@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/swcrc",
+  "sourceMaps": true,
+  "module": {
+    "type": "commonjs"
+  },
+  "jsc": {
+    "target": "esnext",
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["src/*"],
+      "@core/*": ["src/core/*"],
+      "@infrastructure/*": ["src/infrastructure/*"],
+      "@identity/*": ["src/modules/identity/*"]
+    },
+    "parser": {
+      "syntax": "typescript",
+      "decorators": true,
+      "dynamicImport": true
+    },
+    "transform": {
+      "legacyDecorator": true,
+      "decoratorMetadata": true
+    },
+    "keepClassNames": true
+  },
+  "minify": false
+}

@@ -1,0 +1,32 @@
+services:
+  rabbitmq:
+    # image: rabbitmq:4.3.0-management
+    image: rabbitmq:4.3.5-management
+    container_name: rabbitmq
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+
+  postgres:
+    # image: postgres:18.3-bookworm
+    image: postgres:19beta3-trixie
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - ${PROJECT_ROOT}/out/pg-data:/var/lib/postgresql
+    restart: always
+
+  redis:
+    # image: redis:8.2.5-bookworm
+    image: redis:8.10.1-trixie
+    container_name: redis
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - ${PROJECT_ROOT}/out/redis-data:/data
+    restart: always

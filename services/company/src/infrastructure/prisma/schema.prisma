@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./client"
+  url      = env("DATABASE_URL")
+}
+
+generator enums {
+  provider = "node node_modules/@repo/common/scripts/enum-generator.js"
+  output   = "../../../../../packages/common/src/enums/prisma-enums.ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CompanyMemberRole {
+  OWNER
+  ADMIN
+  DISPATCHER
+}
+
+enum CompanyType {
+  AT
+  TOV
+  FOP
+  OTHER
+}
+
+enum EmployeeCount {
+  UP_TO_10
+  UP_TO_50
+  UP_TO_100
+  OVER_100
+}
+
+enum TransportRange {
+  FROM_1_TO_5
+  FROM_6_TO_15
+  FROM_16_TO_30
+  OVER_30
+}
+
+enum Currency {
+  UAH
+  USD
+  EUR
+}
+
+enum SubscriptionPlan {
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  SUBSCRIPTION_PAYMENT
+  TICKET_PURCHASE
+  REFUND
+}
+
+model Company {
+  id String @id @default(nanoid())
+
+  name          String
+  catchPhrase   String?       @map("catch_phrase")
+  bs            String?
+  companyType   CompanyType   @map("company_type")
+  taxCode       String        @unique @map("tax_code")
+  foundingYear  Int           @map("founding_year")
+  employeeCount EmployeeCount @map("employee_count")
+  website       String?
+
+  transportCount TransportRange @map("transport_count")
+  routesCount    TransportRange @map("routes_count")
+
+  intercityTransportation Boolean @default(false) @map("invercity_transportation")
+  touristTrips            Boolean @default(false) @map("tourists_trips")
+  parcelDelivery          Boolean @default(false) @map("parcel_delivery")
+  suburbanTransportation  Boolean @default(false) @map("suburban_transportation")
+  corporateTransportation Boolean @default(false) @map("corporate_transportation")
+  transferAirport         Boolean @default(false) @map("transfer_airport")
+
+  joinCode   String  @unique @map("join_code")
+  isVerified Boolean @default(false) @map("is_verified")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  members        CompanyMember[]
+  subscriptions  CompanySubscription[]
+  paydesks       Paydesk[]
+  tariffs        Tariff[]
+  transactions   Transaction[]
+  deliveryPoints DeliveryPoint[]
+  coinBalance   CoinBalance?
+  address     CompanyAddress?
+
+  @@index([name])
+  @@index([taxCode])
+  @@map("companies")
+}
+
+model CompanyAddress {
+  id String @id @default(nanoid())
+
+  companyId String @unique @map("company_id")
+
+  country String
+  city    String
+  street  String
+  suite   String
+  zipcode String
+
+  lat       Float?
+  lng       Float?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("company_addresses")
+}
+
+model CompanyMember {
+  id        String @id @default(nanoid())
+  userId    String @unique @map("user_id")
+  companyId String @map("company_id")
+
+  role          CompanyMemberRole @default(DISPATCHER)
+  position      String?
+  active        Boolean?          @default(false)
+  publicContact Boolean?          @default(false) @map("public_contact")
+
+  joinedAt  DateTime @default(now()) @map("joined_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([companyId])
+  @@map("company_members")
+}
+
+model DeliveryPoint {
+  id        String @id @default(nanoid())
+  companyId String @map("company_id")
+
+  country   String
+  city      String
+  street    String
+  postcode  String
+  longitude Float?
+  latitude  Float?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("delivery_points")
+}
+
+model CompanySubscription {
+  id        String @id @default(nanoid())
+  companyId String @map("company_id")
+
+  plan      SubscriptionPlan @default(BASIC)
+  active    Boolean          @default(true)
+  startDate DateTime         @default(now()) @map("start_date")
+  endDate   DateTime         @map("end_date")
+
+  includedDrivers Int @default(2) @map("included_drivers")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company              @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  drivers SubscriptionDriver[]
+
+  @@index([companyId])
+  @@map("company_subscriptions")
+}
+
+model SubscriptionDriver {
+  subscriptionId String @map("subscription_id")
+  driverId       String @map("driver_id")
+
+  subscription CompanySubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@id([subscriptionId, driverId])
+  @@map("subscription_drivers")
+}
+
+model Paydesk {
+  id        String @id @default(nanoid())
+  companyId String @map("company_id")
+
+  name         String
+  description  String?
+  mainCurrency Currency @default(UAH) @map("main_currency")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  balances     PaydeskBalance[]
+  transactions Transaction[]
+
+  @@index([companyId])
+  @@map("paydesks")
+}
+
+model PaydeskBalance {
+  id        String @id @default(nanoid())
+  paydeskId String @map("paydesk_id")
+
+  currency Currency
+  amount   Float    @default(0)
+
+  paydesk Paydesk @relation(fields: [paydeskId], references: [id], onDelete: Cascade)
+
+  @@unique([paydeskId, currency])
+  @@index([paydeskId, currency])
+  @@map("paydesk_balances")
+}
+
+model Transaction {
+  id        String  @id @default(nanoid())
+  companyId String? @map("company_id")
+  paydeskId String? @map("paydesk_id")
+
+  type      TransactionType
+  currency  Currency
+  amount    Float
+  coins     Int             @default(0)
+  invoiceId String?         @map("invoice_id")
+  purpose   String?
+  status    String          @default("pending")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  company Company? @relation(fields: [companyId], references: [id])
+  paydesk Paydesk? @relation(fields: [paydeskId], references: [id])
+
+  @@index([companyId])
+  @@index([paydeskId])
+  @@index([invoiceId])
+  @@map("transactions")
+}
+
+model CoinBalance {
+  id        String @id @default(nanoid())
+  companyId String @unique @map("company_id")
+
+  balance Int @default(0)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@map("coin_balances")
+}
+
+model Tariff {
+  id        String  @id @default(nanoid())
+  companyId String? @map("company_id")
+
+  basePrice   Float @default(100) @map("base_price")
+  weightLimit Float @default(20) @map("weight_limit")
+  extraPerKg  Float @default(10) @map("extra_per_kg")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  company Company? @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("tariffs")
+}

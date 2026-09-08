@@ -1,0 +1,61 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "globalDependencies": ["**/.env.*local"],
+  "globalEnv": [
+    "NODE_ENV",
+    "DATABASE_URL",
+    "RABBITMQ_URL"
+  ],
+  "ui": "tui",
+  "concurrency": "20",
+  "tasks": {
+    "dev": {
+      // "dependsOn": ["db:generate"],
+      // "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "dev:solo": {
+      "dependsOn": ["^build"],
+      "persistent": true,
+      "cache": false
+    },
+    "build": {
+      // "dependsOn": ["^build", "db:generate", "format", "lint"],
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "start:prod": {
+      // "dependsOn": ["build"],
+      "cache": false,
+    },
+    "lint": {
+      "dependsOn": ["^lint"],
+      "cache": false
+    },
+    "format": {
+      "dependsOn": ["^format"],
+      "cache": false
+    },
+    "db:reset": {
+      "cache": false
+    },
+    "db:migrate": {
+      "cache": false
+    },
+    "db:deploy": {
+      "cache": false
+    },
+    "db:gen": {
+      "dependsOn": ["^db:gen"],
+      "inputs": ["./src/infrastructure/prisma/schema.prisma"],
+      "outputs": ["../../packages/common/src/enums/prisma-enums.ts"],
+      "cache": false
+    },
+    "check-types": {
+      "dependsOn": ["^check-types"],
+      "cache": false
+    },
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "entryFile": "main",
+  "compilerOptions": {
+    "builder": {
+      "type": "swc",
+      "options": {
+        "swcrcPath": "node_modules/@repo/typescript-config/gateway.swcrc"
+      }
+    },
+    "typeCheck": true,
+    "deleteOutDir": true,
+    "assets": [
+      "infrastructure/prisma/client/**/*"
+    ],
+    "watchAssets": true
+  }
+}

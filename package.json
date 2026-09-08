@@ -1,0 +1,43 @@
+{
+  "name": "vectix.server",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "author": {
+    "name": "Yanbellq",
+    "email": "yanbellq@gmail.com"
+  },
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "NODE_ENV=development turbo run dev",
+    "dev:solo": "NODE_ENV=development turbo run dev:solo",
+    "build": "NODE_ENV=production turbo run build",
+    "start": "NODE_ENV=development turbo run start:prod",
+    "test": "turbo run test",
+    "test:e2e": "turbo run apps/vectix.server/test:e2e",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "db:reset": "turbo db:reset",
+    "db:migrate": "turbo db:migrate --",
+    "db:deploy": "turbo db:deploy",
+    "db:gen": "turbo db:gen"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.12"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "bun@1.4.2",
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "infrastructure/*",
+    "packages/*"
+  ]
+}

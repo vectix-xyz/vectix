@@ -1,0 +1,14 @@
+export const METADATA = {
+  CORRELATION_ID: 'x-correlation-id',
+  ACCESS_CONTROL_EXPOSE_HEADERS: 'access-control-expose-headers',
+  ACCESS_CONTROL_ALLOW_ORIGIN: 'access-control-allow-origin',
+  CONTENT_TYPE: 'content-type',
+  SERVICE_NAME: 'x-service-name',
+  HOST: 'host',
+  REQUEST_ID: 'x-request-id',
+  INTERNAL_TOKEN: 'x-internal-token',
+  LOST_CONTEXT_ID: 'lost-context-id',
+  USER_ID: 'x-user-id',
+  USER_ROLE: 'x-user-role',
+  SESSION_TOKEN: 'x-session-token',
+} as const;

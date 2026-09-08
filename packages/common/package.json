@@ -1,0 +1,139 @@
+{
+  "name": "@repo/common",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SWC,TSC\" -c \"blue,yellow\" \"bun run build:swc --watch\" \"bun run build:tsc --watch --preserveWatchOutput\"",
+    "dev:solo": "concurrently -k -p \"[{name}]\" -n \"SWC,TSC\" -c \"blue,yellow\" \"bun run build:swc --watch\" \"bun run build:tsc --watch --preserveWatchOutput\"",
+    "build:swc": "swc src -d dist --strip-leading-paths --config-file ../typescript-config/nest.swcrc",
+    "build:tsc": "tsc --emitDeclarationOnly",
+    "obfuscate": "javascript-obfuscator ./dist --output ./dist --config obfuscator.json",
+    "build": "bun run clean && bun run build:swc && bun run build:tsc",
+    "build:prod": "bun run build && bun run obfuscate",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix"
+  },
+  "bin": {
+    "prisma-enum-gen": "./scripts/enum-generator.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "./dist/**"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    "./configs": {
+      "types": "./dist/configs/index.d.ts",
+      "import": "./dist/configs/index.js",
+      "require": "./dist/configs/index.js"
+    },
+    "./constants": {
+      "types": "./dist/constants/index.d.ts",
+      "import": "./dist/constants/index.js",
+      "require": "./dist/constants/index.js"
+    },
+    "./decorators": {
+      "types": "./dist/decorators/index.d.ts",
+      "import": "./dist/decorators/index.js",
+      "require": "./dist/decorators/index.js"
+    },
+    "./dto/requests": {
+      "types": "./dist/dto/requests/index.d.ts",
+      "import": "./dist/dto/requests/index.js",
+      "require": "./dist/dto/requests/index.js"
+    },
+    "./dto/responses": {
+      "types": "./dist/dto/responses/index.d.ts",
+      "import": "./dist/dto/responses/index.js",
+      "require": "./dist/dto/responses/index.js"
+    },
+    "./enums": {
+      "types": "./dist/enums/index.d.ts",
+      "import": "./dist/enums/index.js",
+      "require": "./dist/enums/index.js"
+    },
+    "./exceptions": {
+      "types": "./dist/exceptions/index.d.ts",
+      "import": "./dist/exceptions/index.js",
+      "require": "./dist/exceptions/index.js"
+    },
+    "./filters": {
+      "types": "./dist/filters/index.d.ts",
+      "import": "./dist/filters/index.js",
+      "require": "./dist/filters/index.js"
+    },
+    "./interceptors": {
+      "types": "./dist/interceptors/index.d.ts",
+      "import": "./dist/interceptors/index.js",
+      "require": "./dist/interceptors/index.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware/index.d.ts",
+      "import": "./dist/middleware/index.js",
+      "require": "./dist/middleware/index.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/index.d.ts",
+      "import": "./dist/plugins/index.js",
+      "require": "./dist/plugins/index.js"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.ts",
+      "import": "./dist/types/index.js",
+      "require": "./dist/types/index.js"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.ts",
+      "import": "./dist/utils/index.js",
+      "require": "./dist/utils/index.js"
+    },
+    "./validators": {
+      "types": "./dist/validators/index.d.ts",
+      "import": "./dist/validators/index.js",
+      "require": "./dist/validators/index.js"
+    }
+  },
+  "devDependencies": {
+    "@prisma/generator-helper": "^7.10.0",
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@swc/cli": "^0.8.1",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@types/express": "^5.0.6",
+    "@types/lodash.merge": "^4.6.9",
+    "@types/node": "^26.4.1",
+    "bun": "^1.4.2",
+    "eslint": "^10.10.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6",
+    "ts-loader": "^9.6.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^7.0.2",
+    "typescript-eslint": "^8.69.0"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/config": "^12.0.0",
+    "@nestjs/core": "^12.0.1",
+    "@nestjs/microservices": "^12.0.1",
+    "@nestjs/swagger": "^12.0.1",
+    "@scalar/nestjs-api-reference": "^1.2.18",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "concurrently": "^10.0.5",
+    "express": "^5.2.1",
+    "fastify": "^5.12.3",
+    "javascript-obfuscator": "^5.6.0",
+    "lodash.merge": "^4.6.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.5.4"
+  }
+}

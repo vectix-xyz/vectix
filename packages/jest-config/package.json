@@ -1,0 +1,51 @@
+{
+  "name": "@repo/jest-config",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"SWC,TSC\" -c \"blue,yellow\" \"bun run build:swc --watch\" \"bun run build:tsc --watch --preserveWatchOutput\"",
+    "dev:solo": "concurrently -k -p \"[{name}]\" -n \"SWC,TSC\" -c \"blue,yellow\" \"bun run build:swc --watch\" \"bun run build:tsc --watch --preserveWatchOutput\"",
+    "build:swc": "swc src -d dist --strip-leading-paths --config-file ../typescript-config/nest.swcrc",
+    "build:tsc": "tsc --emitDeclarationOnly",
+    "obfuscate": "javascript-obfuscator ./dist --output ./dist --config obfuscator.json",
+    "build": "bun run clean && bun run build:swc && bun run build:tsc",
+    "build:prod": "bun run build && bun run obfuscate"
+  },
+  "main": "./dist/entry.js",
+  "types": "./dist/entry.d.ts",
+  "files": [
+    "./dist/**"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/entry.js",
+      "require": "./dist/entry.js",
+      "types": "./dist/entry.d.ts"
+    },
+    "./base": {
+      "import": "./dist/base.js",
+      "require": "./dist/base.js",
+      "types": "./dist/base.d.ts"
+    },
+    "./nest": {
+      "import": "./dist/nest.js",
+      "require": "./dist/nest.js",
+      "types": "./dist/nest.d.ts"
+    }
+  },
+  "devDependencies": {
+    "@jest/types": "^30.5.1",
+    "@swc/cli": "^0.8.1",
+    "@types/node": "^26.4.1",
+    "javascript-obfuscator": "^5.6.0",
+    "jest": "^30.5.1",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "concurrently": "^10.0.5"
+  }
+}

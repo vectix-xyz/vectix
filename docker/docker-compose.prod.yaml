@@ -1,0 +1,139 @@
+services:
+  # ---------------------------------------------------------------------------
+  # 1. API GATEWAY (Єдина публічна точка входу)
+  # ---------------------------------------------------------------------------
+  gateway:
+    build:
+      context: ..
+      dockerfile: apps/gateway/Dockerfile
+    container_name: vectix-gateway
+    restart: always
+    env_file:
+      - ../apps/gateway/.env
+    ports:
+      # Єдиний сервіс, що слухає зовні (або через Cloudflare/Nginx хоста)
+      - '127.0.0.1:4000:4000'
+    volumes:
+      # Монтуємо виключно ПРИВАТНИЙ ключ у режимі read-only
+      - ../certs/gateway_private.pem:/app/certs/gateway_private.pem:ro
+    environment:
+      - NODE_ENV=production
+      - GATEWAY_PRIVATE_KEY_PATH=/app/certs/gateway_private.pem
+      - BETTER_AUTH_SERVICE_URL=http://auth-service:4201
+    depends_on:
+      auth-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  # ---------------------------------------------------------------------------
+  # 2. AUTH SERVICE (Повна мережева ізоляція від світу)
+  # ---------------------------------------------------------------------------
+  auth-service:
+    build:
+      context: ..
+      dockerfile: services/auth/Dockerfile
+    container_name: vectix-auth
+    restart: always
+    env_file:
+      - ../services/auth/.env
+    # Ніяких ports! Сервіс доступний лише всередині docker-мережі
+    expose:
+      - '4201'
+    volumes:
+      # Монтуємо виключно ПУБЛІЧНИЙ ключ у режимі read-only
+      - ../certs/gateway_public.pem:/app/certs/gateway_public.pem:ro
+    environment:
+      - NODE_ENV=production
+      - GATEWAY_PUBLIC_KEY_PATH=/app/certs/gateway_public.pem
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+      - RMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - internal_net
+
+  # ---------------------------------------------------------------------------
+  # 3. ІНФРАСТРУКТУРА (Без доступу ззовні)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:19-bookworm
+    container_name: vectix-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-vectix}
+    volumes:
+      - pg-prod-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-vectix}',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_net
+
+  redis:
+    image: redis:8.10.1-bookworm
+    container_name: vectix-redis
+    restart: always
+    command:
+      [
+        'redis-server',
+        '--requirepass',
+        '${REDIS_PASSWORD}',
+        '--appendonly',
+        'yes',
+      ]
+    volumes:
+      - redis-prod-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_net
+
+  rabbitmq:
+    image: rabbitmq:4.3.5-alpine
+    container_name: vectix-rabbitmq
+    restart: always
+    # Порти management UI (15672) та сокета (5672) закриті від інтернету
+    volumes:
+      - rmq-prod-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_net
+
+# ---------------------------------------------------------------------------
+# NETWORKS & VOLUMES
+# ---------------------------------------------------------------------------
+networks:
+  internal_net:
+    driver: bridge
+
+volumes:
+  pg-prod-data:
+    name: vectix_pg_prod_data
+  redis-prod-data:
+    name: vectix_redis_prod_data
+  rmq-prod-data:
+    name: vectix_rmq_prod_data

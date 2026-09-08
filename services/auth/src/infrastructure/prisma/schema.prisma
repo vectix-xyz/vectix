@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "./client"
+  url      = env("DATABASE_URL")
+}
+
+generator enums {
+  provider = "node node_modules/@repo/common/scripts/enum-generator.js"
+  output   = "../../../../../packages/common/src/enums/prisma-enums.ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  PASSENGER
+  DRIVER
+  COMPANY
+  ADMIN
+}
+
+enum AdminLevel {
+  SUPER_ADMIN
+  SUPPORT
+  MODERATOR
+}
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PUBLISHED
+  FAILED
+}
+
+enum OutboxTransportType {
+  EMIT
+  SEND
+}
+
+model User {
+  id    String  @id @default(nanoid())
+  name  String
+  email String  @unique
+  phone String? @unique
+  image String?
+
+  role  Role
+  admin Admin?
+
+  twoFactorEnabled Boolean? @default(false) @map("two_factor_enabled")
+  emailVerified    Boolean  @default(false) @map("email_verified")
+
+  banned     Boolean?  @default(false)
+  banReason  String?   @map("ban_reason")
+  banExpires DateTime? @map("ban_expires")
+
+  sessions   Session[]
+  accounts   Account[]
+  twoFactors TwoFactor[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
+}
+
+model Session {
+  id String @id @default(nanoid())
+
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+
+  userAgent String? @map("user_agent")
+  userId    String  @map("user_id")
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String? @map("impersonated_by")
+  ipAddress      String? @map("ip_address")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([token])
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Account {
+  id String @id @default(nanoid())
+
+  accountId  String @map("account_id")
+  providerId String @map("provider_id")
+  userId     String @map("user_id")
+
+  issuer String?
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  scope    String?
+  password String?
+  idToken  String? @map("id_token")
+
+  accessToken  String? @map("access_token")
+  refreshToken String? @map("refresh_token")
+
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Verification {
+  id String @id @default(nanoid())
+
+  value String
+
+  identifier String
+  expiresAt  DateTime @map("expires_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([value])
+  @@index([identifier])
+  @@map("verifications")
+}
+
+model Admin {
+  id String @id @default(nanoid())
+
+  userId String     @unique @map("user_id")
+  level  AdminLevel @default(SUPPORT)
+
+  createdBy String? @map("created_by")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("admins")
+}
+
+model TwoFactor {
+  id String @id @default(nanoid())
+
+  userId      String   @map("user_id")
+  verified    Boolean? @default(true)
+  secret      String
+  backupCodes String   @map("backup_codes")
+
+  lockedUntil             DateTime? @map("locked_until")
+  failedVerificationCount Int?      @default(0) @map("failed_verification_count")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([secret])
+  @@index([userId])
+  @@map("two_factor")
+}
+
+model OutboxMessage {
+  id String @id @default(nanoid())
+
+  pattern       String
+  serviceTarget String @map("service_target")
+
+  type    OutboxTransportType @default(EMIT)
+  payload Json
+  headers Json?
+
+  status     OutboxStatus @default(PENDING)
+  retryCount Int          @default(0) @map("retry_count")
+  maxRetries Int          @default(3) @map("max_retries")
+  lastError  String?      @map("last_error") @db.Text
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@map("outbox_messages")
+}
