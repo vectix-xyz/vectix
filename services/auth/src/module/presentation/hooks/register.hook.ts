@@ -7,9 +7,9 @@ import {
   BeforeHook,
 } from '@thallesp/nestjs-better-auth';
 
-@Injectable()
 @Hook()
-export class AuthHook {
+@Injectable()
+export class RegisterHook {
   constructor(private readonly registerUseCase: RegisterUseCase) {}
 
   // @BeforeHook('/sign-up/email')

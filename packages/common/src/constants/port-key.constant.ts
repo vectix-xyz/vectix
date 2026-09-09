@@ -5,7 +5,9 @@ export const PORT_KEYS = {
     COMPANY: 'CompanyRepository',
     USER: 'UserRepository',
     AUTH: 'AuthRepository',
+    ADMIN: 'AdminRepository',
     OUTBOX: 'OutboxRepository',
+    PHONE_VERIFICATION: 'PhoneVerificationRepository',
   },
   SERVICE: {
     OTP: 'OtpService',

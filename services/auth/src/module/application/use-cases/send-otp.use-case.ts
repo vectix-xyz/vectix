@@ -8,7 +8,7 @@ import {
 } from '@repo/common/constants';
 import type {
   ISendEmailOtpPayload,
-  ISendSmsOtpPayload,
+  // ISendSmsOtpPayload,
 } from '@repo/common/types';
 
 import { SendOtpCommand } from '../commands';
@@ -75,16 +75,16 @@ export class SendOtpUseCase {
           headers,
         });
 
-        await outboxRepository.create({
-          serviceTarget: String(NOTIFICATION_SERVICE),
-          pattern: EVENTS.SMS.SEND_OTP,
-          type: EVENT_TYPES.EMIT,
-          payload: {
-            number: command.phone || user.phoneNumber || '+380976251837',
-            otpCode: code,
-          } as ISendSmsOtpPayload,
-          headers,
-        });
+        // await outboxRepository.create({
+        //   serviceTarget: String(NOTIFICATION_SERVICE),
+        //   pattern: EVENTS.SMS.SEND_OTP,
+        //   type: EVENT_TYPES.EMIT,
+        //   payload: {
+        //     number: command.phone || user.phone || '+380976251837',
+        //     otpCode: code,
+        //   } as ISendSmsOtpPayload,
+        //   headers,
+        // });
       });
 
       this.logger.log(

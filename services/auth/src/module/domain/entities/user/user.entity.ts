@@ -25,8 +25,8 @@ export class UserEntity {
     return this.props.name;
   }
 
-  get phoneNumber(): string | null | undefined {
-    return this.props.phoneNumber;
+  get phone(): string | null | undefined {
+    return this.props.phone;
   }
 
   static reconstitute(props: {
@@ -34,7 +34,8 @@ export class UserEntity {
     email: string | Email;
     name: string;
     emailVerified: boolean;
-    phoneNumber?: string | null;
+    phone?: string | null;
+    phoneVerified?: boolean;
   }): UserEntity {
     return new UserEntity({
       id: props.id,
@@ -42,7 +43,7 @@ export class UserEntity {
         props.email instanceof Email ? props.email : new Email(props.email),
       name: props.name,
       emailVerified: props.emailVerified,
-      phoneNumber: props.phoneNumber,
+      phone: props.phone,
     });
   }
 }

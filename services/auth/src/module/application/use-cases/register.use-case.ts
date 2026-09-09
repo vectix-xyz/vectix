@@ -21,7 +21,6 @@ export class RegisterUseCase {
   async afterSignUp(context: AuthHookContext): Promise<void> {
     const body = context.body as IRegisterHookPayload;
     const ctx = context.context as any;
-    console.log('[after sign up]' + JSON.stringify(context));
 
     if (
       ctx?.returned?.status >= 400 ||

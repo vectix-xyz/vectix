@@ -11,6 +11,7 @@ export const EVENTS = {
     SEND_OTP: `${EMAIL_EVENT_PREFIX}.send-otp`,
     SEND_2FA_TOTP: `${EMAIL_EVENT_PREFIX}.send-2fa-totp`,
     SEND_2FA_QR: `${EMAIL_EVENT_PREFIX}.send-2fa-qr`,
+    SEND_EXISTING_USER_SIGNUP_ALERT: `${EMAIL_EVENT_PREFIX}.send-existing-user-signup-alert`,
   },
   SMS: {
     SEND_OTP: `${SMS_EVENT_PREFIX}.send-otp`,

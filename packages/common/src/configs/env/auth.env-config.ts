@@ -15,6 +15,12 @@ const authEnvSchema = z.object({
     clientId: z.string().min(1),
     clientSecret: z.string().min(1),
   }),
+
+  telegram: z.object({
+    botToken: z.string().min(1),
+    botUsername: z.string().min(1),
+  }),
+  superAdmins: z.array(z.string()).optional(),
 });
 
 export type TAuthEnvConfig = z.infer<typeof authEnvSchema>;
@@ -32,5 +38,14 @@ export const authEnvConfig = registerAs(REGISTER_ENV_KEYS[0], () => {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     },
+
+    telegram: {
+      botToken: process.env.TELEGRAM_BOT_TOKEN,
+      botUsername: process.env.TELEGRAM_BOT_USERNAME,
+    },
+    superAdmins: (process.env.SUPER_ADMIN_EMAILS ?? '')
+      .split(',')
+      .map(email => email.trim().toLowerCase())
+      .filter(Boolean),
   });
 });

@@ -6,7 +6,8 @@ export interface IUserProps {
   name: string;
   emailVerified: boolean;
   role?: string;
-  phoneNumber?: string | null;
+  phone?: string | null;
+  phoneVerified?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }

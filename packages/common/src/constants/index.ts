@@ -9,6 +9,7 @@ export * from './message.constant';
 export * from './metadata.constant';
 export * from './method.constant';
 export * from './otp-purpose-key.constant';
+export * from './phone-verification-status.constant';
 export * from './port-key.constant';
 export * from './queue.constant';
 export * from './redis-key.constant';

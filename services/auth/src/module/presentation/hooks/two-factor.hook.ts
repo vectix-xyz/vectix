@@ -13,8 +13,8 @@ import {
 } from '@thallesp/nestjs-better-auth';
 import { APIError } from 'better-auth';
 
-@Injectable()
 @Hook()
+@Injectable()
 export class TwoFactorHook {
   private readonly logger = new Logger(TwoFactorHook.name);
 

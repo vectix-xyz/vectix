@@ -2,21 +2,25 @@ import { Module } from '@nestjs/common';
 import { TModuleProviders } from '@repo/common/types';
 
 import {
+  ADMIN_REPOSITORY,
   COMPANY_SERVICE,
   OTP_SERVICE,
   OUTBOX_REPOSITORY,
+  TWO_FACTOR_NOTIFICATION,
   UNIT_OF_WORK,
   USER_REPOSITORY,
-  TWO_FACTOR_NOTIFICATION,
 } from './application/ports';
 import { CompanyRegistrationSaga } from './application/sagas';
 import {
   CheckCanVerifyTwoFactorUseCase,
+  EnsureAdminProfileUseCase,
+  NotifyExistingUserSignUpAttemptUseCase,
   RegisterUseCase,
   ScheduleTwoFactorEmailUseCase,
   SendOtpUseCase,
 } from './application/use-cases';
 import {
+  AdminRepositoryAdapter,
   CompanyServiceAdapter,
   OtpServiceAdapter,
   OutboxRepositoryAdapter,
@@ -27,26 +31,40 @@ import {
 import { OutboxMessageDispatcher } from './infrastructure/messaging/dispatchers';
 import { UserRegisteredListener } from './infrastructure/messaging/listeners';
 import { OutboxProcessor } from './infrastructure/messaging/processors';
-import { AuthHook } from './presentation/hooks';
-import { TwoFactorHook } from './presentation/hooks/two-factor.hook';
+import {
+  RegisterHook,
+  TwoFactorHook,
+  UserCreateDatabaseHook,
+} from './presentation/hooks';
 
-const hooks: TModuleProviders = [AuthHook, TwoFactorHook];
+const hooks: TModuleProviders = [
+  UserCreateDatabaseHook,
+  RegisterHook,
+  TwoFactorHook,
+];
 const useCases: TModuleProviders = [
   RegisterUseCase,
   SendOtpUseCase,
   ScheduleTwoFactorEmailUseCase,
-  CheckCanVerifyTwoFactorUseCase
+  CheckCanVerifyTwoFactorUseCase,
+  EnsureAdminProfileUseCase,
+  NotifyExistingUserSignUpAttemptUseCase,
 ];
 const sagas: TModuleProviders = [CompanyRegistrationSaga];
 const listeners: TModuleProviders = [UserRegisteredListener];
 const processors: TModuleProviders = [OutboxProcessor];
 const dispatcher: TModuleProviders = [OutboxMessageDispatcher];
 
-const adapters: TModuleProviders = [
+const repositories: TModuleProviders = [
   { provide: USER_REPOSITORY, useClass: UserRepositoryAdapter },
+  { provide: ADMIN_REPOSITORY, useClass: AdminRepositoryAdapter },
+  { provide: OUTBOX_REPOSITORY, useClass: OutboxRepositoryAdapter },
+];
+const services: TModuleProviders = [
   { provide: OTP_SERVICE, useClass: OtpServiceAdapter },
   { provide: COMPANY_SERVICE, useClass: CompanyServiceAdapter },
-  { provide: OUTBOX_REPOSITORY, useClass: OutboxRepositoryAdapter },
+];
+const adapters: TModuleProviders = [
   { provide: TWO_FACTOR_NOTIFICATION, useClass: TwoFactorNotificationAdapter },
   { provide: UNIT_OF_WORK, useClass: UnitOfWorkAdapter },
 ];
@@ -61,6 +79,8 @@ const adapters: TModuleProviders = [
     ...listeners,
     ...processors,
     ...dispatcher,
+    ...repositories,
+    ...services,
     ...adapters,
   ],
   exports: [...hooks, ...useCases],

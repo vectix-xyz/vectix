@@ -1,3 +1,4 @@
+export * from './admin.repository.port';
 export * from './company.service.port';
 export * from './otp.service.port';
 export * from './outbox.repository.port';

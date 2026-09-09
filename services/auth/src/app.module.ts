@@ -1,6 +1,18 @@
+import { CoreModule } from '@core/core.module';
+import { createAuth } from '@core/lib';
+import {
+  AdminAccessService,
+  BetterAuthAdditionalModule,
+  RedisStorage,
+} from '@infrastructure/better-auth-additional';
+import { BrokerModule } from '@infrastructure/broker';
+import { DocsModule } from '@infrastructure/docs';
+import { PrismaModule, PrismaService } from '@infrastructure/prisma';
+import { TelegramModule } from '@infrastructure/telegram';
+import { AuthModule } from '@module/auth.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService, ConfigType } from '@nestjs/config';
-import { APP_GUARD, ModuleRef } from '@nestjs/core';
+import { ModuleRef } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { JwtModule } from '@nestjs/jwt';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -14,17 +26,9 @@ import {
 import { ENV_KEYS, JWT_KEYS } from '@repo/common/constants';
 import { TModuleImports, TModuleProviders } from '@repo/common/types';
 import { loadKeyFile } from '@repo/common/utils';
-import { OtpModule } from '@repo/infrastructure/otp';
-import { RedisModule, RedisService } from '@repo/infrastructure/redis';
+import { OtpModule } from '@repo/infra/otp';
+import { RedisModule } from '@repo/infra/redis';
 import { AuthModule as BetterAuthModule } from '@thallesp/nestjs-better-auth';
-
-import { CoreModule } from './core/core.module';
-import { createAuth } from './core/lib';
-import { BrokerModule } from './infrastructure/broker';
-import { DocsModule } from './infrastructure/docs';
-import { PrismaModule, PrismaService } from './infrastructure/prisma';
-import { AuthModule } from './module/auth.module';
-import { InternalGatewayGuard } from './core/guards';
 
 const imports: TModuleImports = [
   ConfigModule.forRoot({
@@ -63,10 +67,12 @@ const imports: TModuleImports = [
   ScheduleModule.forRoot(),
 ];
 const infrastructure: TModuleImports = [
+  BetterAuthAdditionalModule,
   PrismaModule,
   RedisModule,
   BrokerModule,
   OtpModule,
+  TelegramModule,
   DocsModule,
 ];
 
@@ -74,7 +80,8 @@ const lib: TModuleImports = [
   BetterAuthModule.forRootAsync({
     useFactory: (
       prismaService: PrismaService,
-      redisService: RedisService,
+      redisStorage: RedisStorage,
+      adminAccessService: AdminAccessService,
       moduleRef: ModuleRef,
       commonEnv: ConfigType<typeof commonEnvConfig>,
       httpEnv: ConfigType<typeof httpEnvConfig>,
@@ -82,7 +89,8 @@ const lib: TModuleImports = [
     ) => ({
       auth: createAuth(
         prismaService,
-        redisService,
+        redisStorage.toSecondaryStorage(),
+        adminAccessService,
         moduleRef,
         commonEnv,
         httpEnv,
@@ -92,7 +100,8 @@ const lib: TModuleImports = [
     }),
     inject: [
       PrismaService,
-      RedisService,
+      RedisStorage,
+      AdminAccessService,
       ModuleRef,
       commonEnvConfig.KEY,
       httpEnvConfig.KEY,

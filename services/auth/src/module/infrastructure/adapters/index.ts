@@ -1,3 +1,4 @@
+export * from './admin.repository.adapter';
 export * from './company.service.adapter';
 export * from './otp.service.adapter';
 export * from './outbox.repository.adapter';

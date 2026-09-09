@@ -1,3 +1,4 @@
+export const PHONE_VERIFY_REDIS_PREFIX = 'phone_verify:';
 export const REDIS_KEYS = {
   OTP: {
     BASE: (email: string) => `otp:${email}`,

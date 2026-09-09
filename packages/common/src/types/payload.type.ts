@@ -14,3 +14,8 @@ export interface ISendTwoFactorQrPayload {
   totpUri: string;
   backupCodes?: string[];
 }
+
+export interface ISendExistingUserSignUpAlertPayload {
+  email: string;
+  attemptedAt: string;
+}

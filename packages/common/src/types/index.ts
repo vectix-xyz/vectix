@@ -1,3 +1,4 @@
+export * from './admin.type';
 export * from './broker.type';
 export * from './message.type';
 export * from './module.type';
