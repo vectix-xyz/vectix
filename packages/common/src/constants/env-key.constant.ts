@@ -49,4 +49,4 @@ export const ENV_KEYS = {
     API_KEY: 'RESEND_API_KEY',
     MAIL_FROM: 'RESEND_MAIL_FROM',
   },
-};
+} as const;

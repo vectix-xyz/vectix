@@ -21,7 +21,7 @@
     "db:gen": "prisma generate --no-hints"
   },
   "dependencies": {
-    "@better-auth/prisma-adapter": "^1.7.3",
+    "@better-auth/prisma-adapter": "^1.7.4",
     "@fastify/cors": "^11.3.0",
     "@nestjs/common": "^12.0.1",
     "@nestjs/config": "^12.0.0",
@@ -41,7 +41,7 @@
     "@repo/lib": "workspace:*",
     "@scalar/nestjs-api-reference": "^1.2.18",
     "@thallesp/nestjs-better-auth": "^2.8.0",
-    "better-auth": "^1.7.3",
+    "better-auth": "^1.7.4",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "dotenv": "^17.4.2",
@@ -65,7 +65,7 @@
     "@repo/jest-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "@types/bun": "^1.4.1",
+    "@types/bun": "^1.4.2",
     "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^26.4.1",
@@ -83,6 +83,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "6",
-    "typescript-eslint": "^8.69.0"
+    "typescript-eslint": "^8.70.0"
   }
 }

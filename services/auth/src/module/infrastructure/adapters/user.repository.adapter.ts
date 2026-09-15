@@ -34,7 +34,7 @@ export class UserRepositoryAdapter implements IUserRepositoryPort {
       email: raw.email,
       name: raw.name,
       emailVerified: raw.emailVerified,
-      // phoneNumber: raw.phoneNumber,
+      phone: raw.phone,
     });
   }
 

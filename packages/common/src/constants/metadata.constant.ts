@@ -11,4 +11,5 @@ export const METADATA = {
   USER_ID: 'x-user-id',
   USER_ROLE: 'x-user-role',
   SESSION_TOKEN: 'x-session-token',
+  APP_TYPE: 'x-app-type',
 } as const;

@@ -10,13 +10,13 @@ export const MESSAGES = {
   INTERNAL_RPC_ERROR: 'Internal RPC Error',
   RABBITMQ_CONNECTION_ERROR:
     'RabbitMQ connection is down. Cannot dispatch message.',
-  UNKNOWN_MESSAGE_TYPE: (type: string) => `Unknown message type: ${type}`,
-  UNKNOWN_SERVICE_TARGET: (target: string) =>
+  f_UNKNOWN_MESSAGE_TYPE: (type: string) => `Unknown message type: ${type}`,
+  f_UNKNOWN_SERVICE_TARGET: (target: string) =>
     `Unknown serviceTarget: ${target}`,
   EMAIL: {
     NON_EMPTY: 'Email must be a non-empty string',
     INVALID_FORMAT: 'Invalid email format',
-    INVALID_FORMAT_FOR: (email: string) => `Invalid email format: ${email}`,
+    f_INVALID_FORMAT: (email: string) => `Invalid email format: ${email}`,
     ALREADY_REGISTERED: 'Email already registered',
     NOT_FOUND: 'Email not found',
   },
@@ -24,6 +24,8 @@ export const MESSAGES = {
     NON_EMPTY: 'Phone number must be a non-empty string',
     REQUIRED: 'Phone number is required.',
     INVALID_FORMAT: 'Invalid phone number format',
+    f_INVALID_FORMAT: (phone: string) =>
+      `Invalid phone number format: ${phone}`,
     ALREADY_REGISTERED: 'Phone number already registered',
     NOT_FOUND: 'Phone number not found',
     AUTHENTICATION_REQUIRED: 'Authentication required to verify phone number.',
@@ -51,7 +53,8 @@ export const MESSAGES = {
       'Contact must belong to your Telegram account',
     PHONE_NUMBER_MISMATCH:
       'Shared phone number does not match registered phone',
-    PHONE_NUMBER_ALREADY_TAKEN: 'Phone number is already associated with another account',
+    PHONE_NUMBER_ALREADY_TAKEN:
+      'Phone number is already associated with another account',
     SESSION_NOT_FOUND: 'Session not found or invalid',
     SESSION_EXPIRED: 'Session expired',
     INVALID_USER_IN_SESSION: 'Invalid user in session',

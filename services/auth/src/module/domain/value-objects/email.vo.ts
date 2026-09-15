@@ -1,4 +1,5 @@
 import { MESSAGES } from '@repo/common/constants';
+import { DomainException } from '@repo/common/exceptions';
 
 export class Email {
   private readonly value: string;
@@ -8,13 +9,13 @@ export class Email {
 
   constructor(email: string) {
     if (!email || typeof email !== 'string') {
-      throw new Error(MESSAGES.EMAIL.NON_EMPTY);
+      throw new DomainException(MESSAGES.EMAIL.NON_EMPTY);
     }
 
     const normalized = email.trim().toLowerCase();
 
     if (!Email.EMAIL_REGEX.test(normalized)) {
-      throw new Error(MESSAGES.EMAIL.INVALID_FORMAT_FOR(email));
+      throw new DomainException(MESSAGES.EMAIL.INVALID_FORMAT_FOR(email));
     }
 
     this.value = normalized;

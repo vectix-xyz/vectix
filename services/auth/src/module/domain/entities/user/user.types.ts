@@ -1,13 +1,23 @@
-import { Email } from '../../value-objects';
+import { Role } from '@repo/common/enums';
+import { Email, Phone } from '../../value-objects';
+
+export interface IUserBanProps {
+  isBanned: boolean;
+  reason?: string | null;
+  expiresAt?: Date | null;
+}
 
 export interface IUserProps {
   id: string;
-  email: Email;
   name: string;
+  email: Email;
   emailVerified: boolean;
-  role?: string;
-  phone?: string | null;
-  phoneVerified?: boolean;
-  createdAt?: Date;
-  updatedAt?: Date;
+  phone?: Phone | null;
+  phoneVerified: boolean;
+  image?: string | null;
+  role: Role;
+  twoFactorEnabled: boolean;
+  ban: IUserBanProps;
+  createdAt: Date;
+  updatedAt: Date;
 }

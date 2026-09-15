@@ -41,7 +41,7 @@
     "@jest/types": "^30.5.1",
     "@swc/cli": "^0.8.1",
     "@types/node": "^26.4.1",
-    "javascript-obfuscator": "^5.6.0",
+    "javascript-obfuscator": "^5.7.0",
     "jest": "^30.5.1",
     "typescript": "^7.0.2"
   },

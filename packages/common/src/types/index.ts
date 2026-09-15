@@ -1,4 +1,5 @@
 export * from './admin.type';
+export * from './app-portal-key.type';
 export * from './broker.type';
 export * from './message.type';
 export * from './module.type';
