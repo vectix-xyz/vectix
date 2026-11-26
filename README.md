@@ -8,12 +8,12 @@
 
 | Файл | Розділ |
 |---|---|
-| [proposal.md](proposal.md) | Thesis Proposal |
-| [0_intro.md](0_intro.md) | Вступ та науковий апарат |
-| [1_analysis.md](1_analysis.md) | Розділ 1. Аналіз предметної області та постановка задачі дослідження |
-| [2_design.md](2_design.md) | Розділ 2. Проєктування (UML, C4, схеми даних) |
-| [3_implementation.md](3_implementation.md) | Розділ 3. Реалізація, тестування, розгортання |
-| [4_conclusions.md](4_conclusions.md) | Висновки |
+| [proposal.md](docs/proposal.md) | Thesis Proposal |
+| [0_intro.md](docs/0_intro.md) | Вступ та науковий апарат |
+| [1_analysis.md](docs/1_analysis.md) | Розділ 1. Аналіз предметної області та постановка задачі дослідження |
+| [2_design.md](docs/2_design.md) | Розділ 2. Проєктування (UML, C4, схеми даних) |
+| [3_implementation.md](docs/3_implementation.md) | Розділ 3. Реалізація, тестування, розгортання |
+| [4_conclusions.md](docs/4_conclusions.md) | Висновки |
 
 ## Робочий документ Розділу 1
 
@@ -35,7 +35,7 @@ Google Docs (доступ «Can comment»): [F2_Diploma_Chapter1](https://docs.g
 
 ## NFRs Matrix (зведення)
 
-Повна матриця: [1_analysis.md, підрозділ 1.5.3](1_analysis.md).
+Повна матриця: [1_analysis.md, підрозділ 1.5.3](docs/1_analysis.md).
 
 | Категорія | Ключова вимога |
 |---|---|
