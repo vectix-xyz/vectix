@@ -1,0 +1,377 @@
+openapi: 3.0.3
+info:
+  title: Vectix Freight Aggregation API
+  version: 1.0.0
+  description: >
+    Специфікація зовнішнього REST API платформи Vectix для створення вантажних запитів,
+    отримання ранжованих пропозицій перевізників та оформлення замовлень.
+servers:
+  - url: https://api.vectix.io/api/v1
+    description: Production Gateway
+  - url: http://localhost:3000/api/v1
+    description: Local Development Environment
+
+security:
+  - BearerAuth: []
+
+paths:
+  /shipments:
+    post:
+      summary: Створення вантажного запиту та ініціація пошуку пропозицій
+      operationId: createShipmentRequest
+      tags:
+        - Shipments
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          description: Унікальний ключ ідемпотентності (UUID v4)
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShipmentRequestDto'
+      responses:
+        '201':
+          description: Вантажний запит створено, подію shipment.requested опубліковано в Kafka
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShipmentResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '429':
+          $ref: '#/components/responses/TooManyRequestsError'
+
+  /shipments/{shipmentId}/quotes:
+    get:
+      summary: Отримання ранжованого списку пропозицій перевізників за вантажним запитом
+      operationId: getShipmentQuotes
+      tags:
+        - Quotes
+      parameters:
+        - name: shipmentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [SCORE, PRICE, ETA]
+            default: SCORE
+      responses:
+        '200':
+          description: Перелік актуальних пропозицій перевізників
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteListResponseDto'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailableError'
+
+  /orders:
+    post:
+      summary: Оформлення замовлення за обраною пропозицією (запуск Saga)
+      operationId: createOrder
+      tags:
+        - Orders
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequestDto'
+      responses:
+        '202':
+          description: Запит прийнято, оркестрацію Saga запущено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponseDto'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '409':
+          description: Конфлікт стану (термін дії пропозиції вичерпано або місткість недоступна)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDto'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ParcelItemDto:
+      type: object
+      required: [lengthCm, widthCm, heightCm, weightKg, quantity]
+      properties:
+        lengthCm:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 1200
+        widthCm:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 300
+        heightCm:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 300
+        weightKg:
+          type: number
+          format: float
+          minimum: 0.1
+          maximum: 25000
+        quantity:
+          type: integer
+          minimum: 1
+          maximum: 1000
+
+    CreateShipmentRequestDto:
+      type: object
+      required:
+        - originCountry
+        - originCity
+        - destinationCountry
+        - destinationCity
+        - cargoCategory
+        - hsCode
+        - declaredValueUsd
+        - incoterm
+        - parcels
+      properties:
+        originCountry:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          example: CN
+        originCity:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Guangzhou
+        destinationCountry:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          example: UA
+        destinationCity:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: Kyiv
+        cargoCategory:
+          type: string
+          enum: [GENERAL, TEXTILE, ELECTRONICS, FRAGILE]
+        hsCode:
+          type: string
+          pattern: '^\d{6,10}$'
+          example: '61091000'
+        declaredValueUsd:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 1000000
+        incoterm:
+          type: string
+          enum: [EXW, FOB, CIF, DAP, DDP]
+        parcels:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/ParcelItemDto'
+
+    ShipmentResponseDto:
+      type: object
+      required: [id, status, totalActualWeightKg, totalChargeableWeightKg, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [CREATED, QUOTING, QUOTED, ORDERED, CANCELLED]
+        totalActualWeightKg:
+          type: number
+          format: float
+        totalChargeableWeightKg:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+
+    QuoteItemDto:
+      type: object
+      required: [id, carrierId, carrierName, totalPriceUsd, estimatedDays, score, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        carrierId:
+          type: string
+          format: uuid
+        carrierName:
+          type: string
+        totalPriceUsd:
+          type: number
+          format: float
+        estimatedDays:
+          type: integer
+          minimum: 1
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        expiresAt:
+          type: string
+          format: date-time
+
+    QuoteListResponseDto:
+      type: object
+      required: [shipmentId, isPartial, items]
+      properties:
+        shipmentId:
+          type: string
+          format: uuid
+        isPartial:
+          type: boolean
+          description: Прапорець часткового результату за недоступності окремих джерел
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/QuoteItemDto'
+
+    CreateOrderRequestDto:
+      type: object
+      required: [shipmentId, quoteId, insuranceRequired]
+      properties:
+        shipmentId:
+          type: string
+          format: uuid
+        quoteId:
+          type: string
+          format: uuid
+        insuranceRequired:
+          type: boolean
+
+    OrderResponseDto:
+      type: object
+      required: [id, shipmentId, quoteId, status, escrowAmountUsd, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        shipmentId:
+          type: string
+          format: uuid
+        quoteId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - PENDING
+            - CAPACITY_RESERVED
+            - INSURED
+            - FUNDS_HELD
+            - CONFIRMED
+            - COMPENSATING
+            - FAILED
+            - COMPLETED
+        escrowAmountUsd:
+          type: number
+          format: float
+        createdAt:
+          type: string
+          format: date-time
+
+    ErrorResponseDto:
+      type: object
+      required: [statusCode, errorCode, message, traceId, timestamp]
+      properties:
+        statusCode:
+          type: integer
+        errorCode:
+          type: string
+        message:
+          type: string
+        traceId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: array
+          items:
+            type: string
+
+  responses:
+    BadRequestError:
+      description: Помилка валідації вхідних даних DTO
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDto'
+    UnauthorizedError:
+      description: Відсутній або недійсний JWT-токен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDto'
+    ForbiddenError:
+      description: Доступ до ресурсу заборонено політикою RBAC/ABAC
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDto'
+    NotFoundError:
+      description: Запитуваний ресурс не знайдено
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDto'
+    TooManyRequestsError:
+      description: Перевищено ліміт запитів Rate Limiting (100 req/min)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDto'
+    ServiceUnavailableError:
+      description: Тимчасова недоступність сервісу розрахунку пропозицій
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponseDto'
