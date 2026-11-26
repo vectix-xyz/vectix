@@ -1,7 +1,7 @@
 # ADR-001: Вибір брокера повідомлень для подієво-керованої взаємодії — Apache Kafka замість RabbitMQ
 
 | Поле | Значення |
-|---|---|
+| --- | --- |
 | Статус | Approved (Затверджено) |
 | Дата | 2026-11-26 |
 | Пов'язані вимоги | [SRS-FUN-15](../srs.md#srs-fun-15), [SRS-FUN-16](../srs.md#srs-fun-16), [SRS-NFR-PERF-03](../srs.md#srs-nfr-perf-03), [SRS-NFR-CONS-01](../srs.md#srs-nfr-cons-01), [SRS-NFR-CONS-02](../srs.md#srs-nfr-cons-02) |
