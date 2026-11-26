@@ -126,7 +126,7 @@ C4Container
 **Трасування контейнерів до вимог.**
 
 | Контейнер | Реалізовані вимоги | Рішення |
-|---|---|---|
+| --- | --- | --- |
 | Identity Service | [SRS-FUN-01](./srs.md#srs-fun-01), [SRS-FUN-02](./srs.md#srs-fun-02), [SRS-NFR-SEC-01](./srs.md#srs-nfr-sec-01), [SRS-FUN-21](./srs.md#srs-fun-21) | — |
 | API Gateway | [SRS-FUN-03](./srs.md#srs-fun-03), [SRS-NFR-SEC-03](./srs.md#srs-nfr-sec-03) | — |
 | Shipment Request Service | [SRS-FUN-04](./srs.md#srs-fun-04), [SRS-FUN-05](./srs.md#srs-fun-05) | [ADR-001](./adr/0001-choice-of-technology.md) |
@@ -212,7 +212,7 @@ C4Component
 **Опис компонентів.**
 
 | Компонент | Шар | Роль | Взаємодія |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | QuoteController | Inbound | Приймає запит пропозицій та вибір пропозиції від API Gateway | gRPC / HTTP/2; делегує QuoteOrchestrationService |
 | ShipmentRequestedConsumer | Inbound | Споживає подію shipment.requested та запускає формування пропозицій | Kafka protocol / TCP; делегує QuoteOrchestrationService |
 | JwtAuthGuard, RolesGuard | Cross-cutting | Верифікація JWT (RS256) та перевірка ролі (RBAC) до виконання контролера | NestJS Guards, Dependency Injection |
@@ -500,15 +500,19 @@ graph TD
 ## 2.1. Обґрунтування архітектурної структури системи
 
 ### Макроархітектурний стиль (Event-Driven Microservices)
+
 Для реалізації платформи Vectix обрано подієво-керовану мікросервісну архітектуру (Event-Driven Microservices) із декомпозицією на 8 обмежених контекстів (Bounded Contexts) за методологією Domain-Driven Design (DDD) та фізичною ізоляцією даних за принципом Database per Service (окремі логічні БД у кластері PostgreSQL 16).
 
 Вибір даного стилю зумовлений вимогами специфікації SRS:
+
 1. **Незалежне горизонтальне масштабування (`SRS-NFR-SCAL-01`):** вузли `Quote Engine Service` та `Tracking Service` мають нерівномірний профіль навантаження (пікові сплески при масовому опитуванні перевізників та прийомі ≥ 1000 подій трекінгу за секунду згідно з `SRS-NFR-PERF-03`). Мікросервісна декомпозиція дозволяє масштабувати лише ці stateless-контейнери через Kubernetes HPA при перевищенні CPU 70% без дублювання ресурсів `Identity Service` чи `Document Service`.
 2. **Асинхронне розв'язання та відмовостійкість (`SRS-NFR-REL-01`, `ADR-001`):** використання Apache Kafka у режимі KRaft усуває каскадні відмови при пікових навантаженнях. Зокрема, створення вантажного запиту (`POST /shipments`) виконується за p95 ≤ 200 мс (`SRS-NFR-PERF-01`), оскільки довготривале паралельне опитування зовнішніх API перевізників (таймаут 2 с на перевізника згідно з `SRS-NFR-PERF-02`) винесено у фонову обробку через подію `shipment.requested`.
 3. **Поліглотна архітектура обробки даних:** основний транзакційний контур реалізовано на TypeScript (NestJS) у межах монорепозиторію Turborepo для спільного використання DTO та контрактів, тоді як модуль `Quote Scoring Service` виокремлено на Python (FastAPI) для виконання математичного ранжування та прогнозування ETA.
 
 ### Патерни мікрорівня та забезпечення консистентності
+
 Для усунення жорсткої зв'язності (Tight Coupling) та гарантії цілісності розподілених даних у коді сервісів застосовано такі інженерні патерни:
+
 * **Hexagonal Architecture (Ports & Adapters) та Dependency Inversion:** доменне ядро `Quote Engine Service` (`ChargeableWeightCalculator`, `TariffNormalizer`) ізольоване від транспортного шару та зовнішніх клієнтів. Оркестратор залежить виключно від TypeScript-інтерфейсів (`CarrierQuotePort`, `RankingPort`), що дозволяє підміняти реалізації через Dependency Injection у NestJS під час модульного тестування.
 * **Orchestration-based Saga (`SRS-FUN-12`, `13`):** оформлення замовлення координується виділеним `Order Orchestrator` у послідовності локальних транзакцій (`RESERVE_CAPACITY` → `ISSUE_INSURANCE` → `HOLD_ESCROW` → `CONFIRM_CARRIER`). У разі відмови будь-якого кроку виконуються компенсуючі команди у зворотному порядку з обмеженням кількості повторів (`MaxRetries`), що усуває проблему розподілених 2PC-блокувань.
 * **Transactional Outbox та Idempotent Consumer (`SRS-NFR-CONS-01`):** для запобігання проблемі Dual Write запис бізнес-сутності та публікація події у таблицю `OUTBOX_EVENTS` виконуються в одній локальній ACID-транзакції PostgreSQL. На стороні споживачів дедуплікація забезпечується перевіркою `event_id` (Primary Key у `TRACKING_EVENTS`) та ключами `X-Idempotency-Key`.
@@ -520,6 +524,7 @@ graph TD
 ## 2.3. Опис взаємодії рівнів серверного ядра (доповнення до C4 Level 3)
 
 Внутрішня архітектура `Quote Engine Service` побудована за принципом чіткого розділення відповідальності між трьома шарами:
+
 1. **Inbound Layer (Транспортний рівень та перехоплювачі):** запити від `API Gateway` надходять до `QuoteController` через gRPC / HTTP/2, а асинхронні події — до `ShipmentRequestedConsumer` із Apache Kafka. До передачі керування в бізнес-логіку ланцюг NestJS Guards та Pipes виконує перевірку JWT-підпису (`JwtAuthGuard`), авторизацію ролей (`RolesGuard`), валідацію вхідної структури (`ValidationPipe`) та ініціалізацію контексту розподіленого трасування (`TelemetryInterceptor` через OpenTelemetry SDK).
 2. **Core Layer (Рівень оркестрації та доменної логіки):** `QuoteOrchestrationService` координує життєвий цикл запиту: перевіряє наявність валідного кешу через порт сховища, викликає чистий доменний сервіс `ChargeableWeightCalculator` для обчислення тарифікованої ваги, ініціює паралельний збір ставок через `CarrierQuotePort` та нормалізує їх за допомогою `TariffNormalizer`.
 3. **Outbound Layer (Інфраструктурні адаптери):** конкретні реалізації портів інкапсулюють мережеві протоколи: `TariffGridQuoteProvider` (gRPC до `Carrier Management Service`), `ExternalCarrierApiProvider` (REST/HTTPS до зовнішніх API перевізників, захищений декоратором `CircuitBreakerPolicy`), `ScoringServiceClient` (REST/JSON до `Quote Scoring Service`), `QuoteCache` (RESP/TCP до Redis) та `QuoteRepository`, який атомарно фіксує розраховані пропозиції та запис у таблицю `OUTBOX_EVENTS` для подальшої публікації через `OutboxRelay`.
